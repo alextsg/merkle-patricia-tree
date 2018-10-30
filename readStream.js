@@ -1,32 +1,28 @@
 const Readable = require('readable-stream').Readable
 const TrieNode = require('./trieNode')
-const util = require('util')
 
-module.exports = TrieReadStream
+module.exports = class TrieReadStream extends Readable {
+  constructor (trie) {
+    super({ objectMode: true })
 
-function TrieReadStream (trie) {
-  this.trie = trie
-  this.next = null
-  Readable.call(this, {
-    objectMode: true
-  })
-}
+    this.trie = trie
+    this.next = null
+  }
 
-util.inherits(TrieReadStream, Readable)
+  _read = () => {
+    if (!this._started) {
+      this._started = true
+      this.trie._findValueNodes((nodeRef, node, key, next) => {
+        this.push({
+          key: TrieNode.nibblesToBuffer(key),
+          value: node.value
+        })
 
-TrieReadStream.prototype._read = function () {
-  var self = this
-  if (!self._started) {
-    self._started = true
-    self.trie._findValueNodes(function (nodeRef, node, key, next) {
-      self.push({
-        key: TrieNode.nibblesToBuffer(key),
-        value: node.value
+        next()
+      }, () => {
+        // close stream
+        this.push(null)
       })
-      next()
-    }, function () {
-      // close stream
-      self.push(null)
-    })
+    }
   }
 }

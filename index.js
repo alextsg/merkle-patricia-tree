@@ -1,16 +1,18 @@
 const BaseTrie = require('./baseTrie')
 const checkpointInterface = require('./checkpoint-interface')
-const inherits = require('util').inherits
 const proof = require('./proof.js')
 
-module.exports = CheckpointTrie
+module.exports = class CheckpointTrie extends BaseTrie {
+  constructor (...args) {
+    super(...args)
+    checkpointInterface.call(this, this)
+  }
 
-inherits(CheckpointTrie, BaseTrie)
+  static prove (...args) {
+    return proof.prove(...args)
+  }
 
-function CheckpointTrie () {
-  BaseTrie.apply(this, arguments)
-  checkpointInterface.call(this, this)
+  static verifyProof (...args) {
+    return proof.verifyProof(...args)
+  }
 }
-
-CheckpointTrie.prove = proof.prove
-CheckpointTrie.verifyProof = proof.verifyProof
